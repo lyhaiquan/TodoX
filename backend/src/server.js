@@ -3,18 +3,31 @@ import tasksRouter from './routes/tasksRouter.js';
 import connectDB from './config/db.js';
 import dotevn from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+
+
 dotevn.config();
 
 const PORT = process.env.PORT || 5001;
+const __dirname = path.resolve();
+
 
 const app = express();
 
 
 app.use(express.json());
-// Cách sửa đúng: dùng dấu hai chấm (:) bên trong dấu ngoặc nhọn {}
-app.use(cors({ origin: "http://localhost:5173" }));
+if (process.env.NODE_ENV !== 'production') {
+    app.use(cors({ origin: "http://localhost:5173" }));
+}
 app.use("/api/tasks", tasksRouter);
-app.use(express.json())
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, "../../TodoX/frontend/vite-project/dist")));
+    app.get("*", (req, res) => {
+        res.sendFile(path.join(__dirname, "../../TodoX/frontend/vite-project/dist/index.html"));
+    });
+}
+app.use(express.json());
 
 connectDB().then(() => {
     app.listen(PORT, () => {
