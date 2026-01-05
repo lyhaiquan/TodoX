@@ -4,29 +4,29 @@ import connectDB from './config/db.js';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const PORT = process.env.PORT || 5001;
-// path.resolve() sẽ trỏ về thư mục gốc (TodoX) khi chạy lệnh từ ngoài
-const __dirname = path.resolve();
+
+// Cách lấy đường dẫn tuyệt đối chuẩn nhất trong ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
 app.use(express.json());
 
-// Kiểm tra môi trường bằng process.env
 if (process.env.NODE_ENV !== 'production') {
     app.use(cors({ origin: "http://localhost:5173" }));
 }
 
-// Routes API
 app.use("/api/tasks", tasksRouter);
 
-// Cấu hình phục vụ Frontend trong môi trường Production
 if (process.env.NODE_ENV === 'production') {
-    // Đường dẫn đi từ gốc dự án TodoX vào thư mục dist của frontend
-    const frontendPath = path.join(__dirname, "frontend", "vite-project", "dist");
+    // Giải thích: Từ backend/src đi ngược ra 2 cấp sẽ tới gốc TodoX
+    const frontendPath = path.join(__dirname, "..", "..", "frontend", "vite-project", "dist");
     
     app.use(express.static(frontendPath));
     
@@ -35,7 +35,6 @@ if (process.env.NODE_ENV === 'production') {
     });
 }
 
-// Kết nối Database và chạy Server
 connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT}`);
